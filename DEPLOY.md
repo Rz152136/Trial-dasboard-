@@ -29,11 +29,20 @@ Hobby melarang pemakaian komersial di ketentuan layanannya.
 2. "New Project" → beri nama, buat password database (simpan baik-baik), pilih region terdekat (mis. Singapore).
 3. Setelah project siap, buka **SQL Editor** → "New query" → tempel isi
    `supabase/schema.sql` → klik **Run**. Ini membuat tabel `entries`.
-4. Buka **Project Settings → API**. Catat dua nilai ini:
+4. Buka **Project Settings → API**. Catat tiga nilai ini:
    - **Project URL** (contoh: `https://xxxxx.supabase.co`)
-   - **service_role key** (di bagian "Project API keys" — bukan yang
-     `anon`/`public`, tapi yang `service_role`. Ini kunci rahasia dengan
-     akses penuh, jangan pernah taruh di kode frontend.)
+   - **anon / public key** — ini yang ditaruh langsung di `index.html`
+     (baris `SUPABASE_ANON_KEY`), aman untuk publik karena dibatasi RLS.
+   - **service_role key** — untuk Environment Variable di Vercel (Langkah 3).
+     Jangan pernah taruh ini di kode frontend.
+5. Buka `index.html`, cari baris `SUPABASE_URL` dan `SUPABASE_ANON_KEY` di
+   bagian atas file, isi dengan Project URL & anon key dari langkah di atas.
+6. **Buat akun IE (superadmin) pertama** — ikuti instruksi di bagian bawah
+   `supabase/schema.sql` (Authentication → Users → Add User, lalu insert
+   satu baris manual di tabel `profiles` dengan `role = 'ie'`). Ini
+   satu-satunya langkah manual; setelah itu, akun IE ini bisa membuat
+   semua user lain (supervisor/tamu) langsung dari tab "Kelola User" di
+   aplikasi.
 
 ---
 
