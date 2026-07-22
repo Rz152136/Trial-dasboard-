@@ -6,8 +6,16 @@ const {
   entryToRow,
   rowToEntry,
 } = require('../lib/entries');
+const { requireUser, requireRole } = require('../lib/auth');
 
 module.exports = async (req, res) => {
+  let user;
+  try {
+    user = await requireUser(req);
+  } catch (err) {
+    return res.status(err.status || 401).json({ error: err.message });
+  }
+
   let supabase;
   try {
     supabase = getSupabase();
@@ -16,6 +24,7 @@ module.exports = async (req, res) => {
   }
 
   if (req.method === 'GET') {
+    // Semua role yang sudah login (supervisor, ie, tamu) boleh melihat data.
     const { data, error } = await supabase
       .from('entries')
       .select('*')
@@ -25,6 +34,13 @@ module.exports = async (req, res) => {
   }
 
   if (req.method === 'POST') {
+    // Hanya supervisor dan ie yang boleh input/update data. Tamu read-only.
+    try {
+      requireRole(user, ['supervisor', 'ie']);
+    } catch (err) {
+      return res.status(err.status).json({ error: err.message });
+    }
+
     const entry = sanitizeEntry(req.body || {});
     const errors = validateEntry(entry);
     if (errors.length) {
@@ -70,4 +86,3 @@ module.exports = async (req, res) => {
   res.setHeader('Allow', ['GET', 'POST']);
   return res.status(405).json({ error: 'Method not allowed' });
 };
-            
