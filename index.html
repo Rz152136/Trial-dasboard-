@@ -564,14 +564,32 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
   errEl.textContent = '';
   btn.disabled = true;
   btn.textContent = 'Memproses...';
-  const { error } = await sbClient.auth.signInWithPassword({ email, password });
-  btn.disabled = false;
-  btn.textContent = 'Masuk';
-  if(error){
-    errEl.textContent = 'Login gagal: email atau password salah.';
-    return;
+  
+  // 🔥 PAKAI ENDPOINT BARU /api/login
+  try {
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    
+    const data = await res.json();
+    btn.disabled = false;
+    btn.textContent = 'Masuk';
+    
+    if (!res.ok) {
+      errEl.textContent = data.error || 'Login gagal.';
+      return;
+    }
+    
+    // Simpan session ke supabase client
+    await sbClient.auth.setSession(data.session);
+    await showApp();
+  } catch (error) {
+    btn.disabled = false;
+    btn.textContent = 'Masuk';
+    errEl.textContent = 'Terjadi kesalahan: ' + error.message;
   }
-  await showApp();
 });
 
 document.getElementById('logoutBtn').addEventListener('click', async ()=>{
