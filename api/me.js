@@ -1,5 +1,4 @@
 const { requireUser } = require('../lib/auth');
-
 module.exports = async (req, res) => {
   try {
     const user = await requireUser(req);
@@ -7,6 +6,7 @@ module.exports = async (req, res) => {
       email: user.email,
       fullName: user.fullName,
       role: user.role,
+      line: user.line || null,
     });
   } catch (err) {
     return res.status(err.status || 401).json({ error: err.message });
