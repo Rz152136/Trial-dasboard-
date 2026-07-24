@@ -56,15 +56,21 @@ module.exports = async (req, res) => {
       updated_at: new Date().toISOString(),
     };
 
-    // upsert by (line, date)
-    const { data: existing } = await supabase
+    // upsert by (line, date). Pakai order+limit(1) alih-alih maybeSingle() supaya
+    // kalau (karena data lama) ada lebih dari satu baris untuk line+date yang sama,
+    // sistem tetap konsisten meng-update baris yang paling baru, bukan diam-diam
+    // membuat baris baru (yang menyebabkan MC Shift/Productivity kelihatan tidak berubah).
+    const { data: existingRows, error: existingErr } = await supabase
       .from('line_config')
       .select('id')
       .eq('line', row.line)
       .eq('date', row.date)
-      .maybeSingle();
+      .order('updated_at', { ascending: false })
+      .limit(1);
 
-    row.id = existing ? existing.id : genId();
+    if (existingErr) return res.status(500).json({ error: existingErr.message });
+
+    row.id = (existingRows && existingRows.length) ? existingRows[0].id : genId();
 
     const { data, error } = await supabase
       .from('line_config')
